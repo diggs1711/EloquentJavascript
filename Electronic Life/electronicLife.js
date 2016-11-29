@@ -142,56 +142,117 @@ World.prototype.turn = function() {
 };
 
 World.prototype.letAct = function(critter, vector) {
-  var action = critter.act(new View(this, vector));
-  if (action && action.type == "move") {
-    var dest = this.checkDestination(action, vector);
-    if (dest && this.grid.get(dest) == null) {
-      this.grid.set(vector, null);
-      this.grid.set(dest, critter);
+    var action = critter.act(new View(this, vector));
+    if (action && action.type == "move") {
+        var dest = this.checkDestination(action, vector);
+        if (dest && this.grid.get(dest) == null) {
+            this.grid.set(vector, null);
+            this.grid.set(dest, critter);
+        }
     }
-  }
 };
 
 World.prototype.checkDestination = function(action, vector) {
-  if (directions.hasOwnProperty(action.direction)) {
-    var dest = vector.plus(directions[action.direction]);
-    if (this.grid.isInside(dest))
-      return dest;
-  }
+    if (directions.hasOwnProperty(action.direction)) {
+        var dest = vector.plus(directions[action.direction]);
+        if (this.grid.isInside(dest))
+            return dest;
+    }
 };
 
 function View(world, vector) {
-  this.world = world;
-  this.vector = vector;
+    this.world = world;
+    this.vector = vector;
 }
 
 View.prototype.look = function(dir) {
-  var target = this.vector.plus(directions[dir]);
-  if (this.world.grid.isInside(target))
-    return charFromElement(this.world.grid.get(target));
-  else {
-    return "#";
-  }
+    var target = this.vector.plus(directions[dir]);
+    if (this.world.grid.isInside(target))
+        return charFromElement(this.world.grid.get(target));
+    else {
+        return "#";
+    }
 };
 
 View.prototype.findAll = function(ch) {
-  var found = [];
-  for ( var dir in directions)
-    if (this.look(dir) == ch)
-      found.push(dir);
+    var found = [];
+    for (var dir in directions)
+        if (this.look(dir) == ch)
+            found.push(dir);
     return found;
 };
 
 View.prototype.find = function(ch) {
-  var found = this.findAll(ch);
-  if (found.length == 0) return null;
-  return randomElement(found);
+    var found = this.findAll(ch);
+    if (found.length == 0) return null;
+    return randomElement(found);
 }
 
 var w = document.getElementById('world');
 
-for (var i = 0;i < 5; i++) {
-  w.innerHTML = world.toString();
-  console.log(world.toString());
-  world.turn();
+for (var i = 0; i < 5; i++) {
+    w.innerHTML = world.toString();
+    console.log(world.toString());
+    world.turn();
 }
+
+function dirPlus(dir, n) {
+    var index = directionNames.indexOf(dir);
+    return directionNames[(undex + n + 8) % 8];
+}
+
+function WallFlower() {
+    this.dir = "s";
+}
+
+WallFlower.prototype.act = function(view) {
+    var start = this.dir;
+    if (view.look(dirPlus(this.dir, -3)) != " ")
+        start = this.dir = dirPlus(this.dir, -2);
+    while (view.look(this.dir) != " ") {
+        this.dir = dirPlus(this.dir, 1);
+        if (this.dir == start) break;
+    }
+    return {
+        type: "move",
+        direction: this.dir
+    };
+};
+
+//ingeritance
+function LifelikeWorld(map, legend) {
+    World.call(this, map, legend);
+}
+
+LifelikeWorld.prototype = Object.create(World.prototype);
+
+var actionTypes = Object.create(null);
+
+LifelikeWorld.prototype.letAct = function(critter, vector) {
+    var action = critter.act(new View(this, vector));
+    var handled = action &&
+        action.type in actionTypes &&
+        actionTypes[action.type].call(this, critter, vector, action);
+    if (!handled) {
+        critter.energy -= 0.2;
+        if (criter.energy <= 0)
+            this.grid.set(vector, null);
+    }
+};
+
+actionTypes.grow = function(critter) {
+  critter += 0.5;
+  return true;
+};
+
+actionTypes.move = function(critter, vector, action) {
+  var dest = this.checkDestination(action, vector);
+  if(dest == null ||
+      critter.energy <= 1 ||
+      this.grid.get(dest) != null)
+      return false;
+  critter.energy -= 1;
+  this.grid.set(vector, null);
+  this.grid.set(dest, critter);
+  return true;
+};
