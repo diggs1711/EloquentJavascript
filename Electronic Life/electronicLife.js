@@ -314,8 +314,26 @@ PlantEater.prototype.act = function(view) {
         };
 };
 
+var valley = new LifelikeWorld(
+  ["############################" ,
+   "#####                 ######" ,
+   "##    ***               **##" ,
+   "#     *##**         ** O *##" ,
+   "# *** O              ##** *#" ,
+   "# O                  ##*** #" ,
+   "# #                    #** #" ,
+   "#                     O #* #" ,
+   "#* #**                   O #" ,
+   "#*** #             #** O **#" ,
+   "##**          ** ###*** *###" ,
+   "############################"],
+   {"#": Wall ,
+    "O": PlantEater ,
+    "*": Plant }
+);
+
 for (var i = 0; i < 5; i++) {
     //w.innerHTML = world.toString();
-    console.log(world.toString());
-    world.turn();
+    console.log(valley.toString());
+    valley.turn();
 }
