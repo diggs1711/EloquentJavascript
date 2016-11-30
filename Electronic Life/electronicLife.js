@@ -227,7 +227,7 @@ LifelikeWorld.prototype.letAct = function(critter, vector) {
         actionTypes[action.type].call(this, critter, vector, action);
     if (!handled) {
         critter.energy -= 0.2;
-        if (criter.energy <= 0)
+        if (critter.energy <= 0)
             this.grid.set(vector, null);
     }
 };
@@ -315,25 +315,95 @@ PlantEater.prototype.act = function(view) {
 };
 
 var valley = new LifelikeWorld(
-  ["############################" ,
-   "#####                 ######" ,
-   "##    ***               **##" ,
-   "#     *##**         ** O *##" ,
-   "# *** O              ##** *#" ,
-   "# O                  ##*** #" ,
-   "# #                    #** #" ,
-   "#                     O #* #" ,
-   "#* #**                   O #" ,
-   "#*** #             #** O **#" ,
-   "##**          ** ###*** *###" ,
-   "############################"],
-   {"#": Wall ,
-    "O": PlantEater ,
-    "*": Plant }
+    ["############################",
+        "#####                 ######",
+        "##    ***               **##",
+        "#     *##**         ** O *##",
+        "# *** O              ##** *#",
+        "# O                  ##*** #",
+        "# #                    #** #",
+        "#                     O #* #",
+        "#* #**                   O #",
+        "#*** #             #** O **#",
+        "##**          ** ###*** *###",
+        "############################"
+    ], {
+        "#": Wall,
+        "O": PlantEater,
+        "*": Plant
+    }
 );
 
-for (var i = 0; i < 5; i++) {
-    //w.innerHTML = world.toString();
-    console.log(valley.toString());
-    valley.turn();
+
+function SmartPlantEater() {
+    PlantEater.call(this);
 }
+
+SmartPlantEater.prototype = Object.create(PlantEater.prototype);
+
+SmartPlantEater.prototype.eat = function() {
+    if (!this.energy > 60) {
+        var dest = this.checkDestination(action, vector);
+        var atDest = dest != null && this.grid.get(dest);
+        if (!atDest || atDest.energy == null)
+            return false;
+        critter.energy += atDest.energy;
+        this.grid.set(dest, null);
+        return true;
+    } else {
+        return false;
+    }
+
+
+}
+
+var active = null;
+
+function Animated(world) {
+  this.world = world;
+  var outer = document.getElementById('world'), doc = outer.ownerDocument;
+  var node = outer.appendChild(doc.createElement("div"));
+  node.style.cssText = "position: relative; width: intrinsic; width: fit-content;";
+  this.pre = node.appendChild(doc.createElement("pre"));
+  this.pre.appendChild(doc.createTextNode(world.toString()));
+  this.button = node.appendChild(doc.createElement("div"));
+  this.button.style.cssText = "position: absolute; bottom: 8px; right: -4.5em; color: white; font-family: tahoma, arial; " +
+    "background: #4ab; cursor: pointer; border-radius: 18px; font-size: 70%; width: 3.5em; text-align: center;";
+  this.button.innerHTML = "stop";
+  var self = this;
+  this.button.addEventListener("click", function() { self.clicked(); });
+  this.disabled = false;
+  if (active) active.disable();
+  active = this;
+  this.interval = setInterval(function() { self.tick(); }, 333);
+}
+
+Animated.prototype.clicked = function() {
+  if (this.disabled) return;
+  if (this.interval) {
+    clearInterval(this.interval);
+    this.interval = null;
+    this.button.innerHTML = "start";
+  } else {
+    var self = this;
+    this.interval = setInterval(function() { self.tick(); }, 333);
+    this.button.innerHTML = "stop";
+  }
+};
+
+Animated.prototype.tick = function() {
+  this.world.turn();
+  this.pre.removeChild(this.pre.firstChild);
+  this.pre.appendChild(this.pre.ownerDocument.createTextNode(this.world.toString()));
+};
+
+Animated.prototype.disable = function() {
+  this.disabled = true;
+  clearInterval(this.interval);
+  this.button.innerHTML = "Disabled";
+  this.button.style.color = "red";
+};
+
+window.animateWorld = function(world) { new Animated(world); };
+
+animateWorld(valley)
