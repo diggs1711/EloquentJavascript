@@ -323,7 +323,6 @@ function SmartPlantEater() {
 
 SmartPlantEater.prototype.act = function(view) {
     var space = view.find(" ");
-    console.log(this.energy)
     if (this.energy > 90 && space)
         return {
             type: "reproduce",
@@ -346,8 +345,8 @@ SmartPlantEater.prototype.act = function(view) {
 
 //Excercise #2: Predator
 function Predator() {
-    this.energy = 20;
-    this.direction = "w";
+    this.energy = 120;
+    this.direction = "n";
     this.preySeen = [];
 }
 
@@ -442,18 +441,18 @@ window.animateWorld = function(world) {
 };
 
 var valley = new LifelikeWorld(
-    ["######################################",
-     "#                                    #",
-     "##    ####   #                    **##",
-     "#     #   #  #             ** O *##",
-     "# *** #   #  #                  ##** *#",
-     "# O   #   #  #                   ##*** #",
-     "# #   #  #   #                     #** #",
-     "#     # #    #v                   O #* #",
-     "#* #**                             O #",
-     "#*** #                       #** O **#",
-     "##**                    ** ###*** *###",
-     "######################################"
+    ["####################################################",
+     "#         O O O O O O O O                          #",
+     "##    # # #     #  # # # #  # # # #   # # # #   **##",
+     "#     #     #   #  #        #   ** O  #          *##",
+     "# *** #      #  #  #        #         #        ** *#",
+     "# O   #      #  #  #   # #  #   # #   # # # #  *** #",
+     "# #   #     #   #  #     #  #     #         #   ** #",
+     "#     # # #     #  # # # #  # # # #   # # # #    * #",
+     "#* #**                                             #",
+     "#*** #                                     #**   **#",
+     "##**           v v v v v v v          ** ###*** *###",
+     "####################################################"
     ], {
         "#": Wall,
         "O": SmartPlantEater,
