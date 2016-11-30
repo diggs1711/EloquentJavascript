@@ -222,9 +222,9 @@ var actionTypes = Object.create(null);
 
 LifelikeWorld.prototype.letAct = function(critter, vector) {
     var action = critter.act(new View(this, vector));
-    var handled = action
-                  && action.type in actionTypes
-                  && actionTypes[action.type].call(this, critter, vector, action);
+    var handled = action &&
+        action.type in actionTypes &&
+        actionTypes[action.type].call(this, critter, vector, action);
     if (!handled) {
         critter.energy -= 0.2;
         if (critter.energy <= 0)
@@ -281,9 +281,9 @@ Plant.prototype.act = function(view) {
         if (space)
 
             return {
-                type: "reproduce",
-                direction: space
-            };
+            type: "reproduce",
+            direction: space
+        };
     }
     if (this.energy < 20)
         return {
@@ -318,97 +318,147 @@ PlantEater.prototype.act = function(view) {
 //Excercise #1
 function SmartPlantEater() {
     this.energy = 30;
-    this.direction  = "e";
+    this.direction = "e";
 }
 
 SmartPlantEater.prototype.act = function(view) {
-  var space = view.find(" ");
-  if (this.energy > 90 && space)
-      return {
-          type: "reproduce",
-          direction: space
-      }
+    var space = view.find(" ");
+    console.log(this.energy)
+    if (this.energy > 90 && space)
+        return {
+            type: "reproduce",
+            direction: space
+        }
 
-  var plants = view.findAll("*");
-  if (plants.length > 1)
-      return {
-          type: "eat",
-          direction: randomElement(plants)
-      };
-  if (view.look(this.direction) != " " && space)
-      this.direction = space;
-      return {
-          type: "move",
-          direction: this.direction
-      };
+    var plants = view.findAll("*");
+    if (plants.length > 1)
+        return {
+            type: "eat",
+            direction: randomElement(plants)
+        };
+    if (view.look(this.direction) != " " && space)
+        this.direction = space;
+    return {
+        type: "move",
+        direction: this.direction
+    };
 }
 
+//Excercise #2: Predator
+function Predator() {
+    this.energy = 20;
+    this.direction = "w";
+    this.preySeen = [];
+}
+
+Predator.prototype.act = function(view) {
+    var space = view.find(" ");
+    if (this.energy > 400 && space)
+        return {
+            type: "reproduce",
+            direction: space
+        }
+
+    var preySeenPerTurn = this.preySeen.reduce(function(a,b){
+      return a+ b;
+    }, 0) / this.preySeen.length;
+
+    var prey = view.findAll("O");
+    this.preySeen.push(prey.length);
+    if(this.preySeen.length > 6)
+      this.preySeen.shift();
+
+    if (prey.length && preySeenPerTurn > 0.25)
+        return {
+            type: "eat",
+            direction: randomElement(prey)
+        };
+    if (view.look(this.direction) != " " && space)
+        this.direction = space;
+    return {
+        type: "move",
+        direction: this.direction
+    };
+}
+
+
+//Animation
 var active = null;
 
 function Animated(world) {
-  this.world = world;
-  var outer = document.getElementById('world'), doc = outer.ownerDocument;
-  var node = outer.appendChild(doc.createElement("div"));
-  node.style.cssText = "position: relative; width: intrinsic; width: fit-content;";
-  this.pre = node.appendChild(doc.createElement("pre"));
-  this.pre.appendChild(doc.createTextNode(world.toString()));
-  this.button = node.appendChild(doc.createElement("div"));
-  this.button.style.cssText = "position: absolute; bottom: 8px; right: -4.5em; color: white; font-family: tahoma, arial; " +
-    "background: #4ab; cursor: pointer; border-radius: 18px; font-size: 70%; width: 3.5em; text-align: center;";
-  this.button.innerHTML = "stop";
-  var self = this;
-  this.button.addEventListener("click", function() { self.clicked(); });
-  this.disabled = false;
-  if (active) active.disable();
-  active = this;
-  this.interval = setInterval(function() { self.tick(); }, 333);
+    this.world = world;
+    var outer = document.getElementById('world'),
+        doc = outer.ownerDocument;
+    var node = outer.appendChild(doc.createElement("div"));
+    node.style.cssText = "position: relative; width: intrinsic; width: fit-content;";
+    this.pre = node.appendChild(doc.createElement("pre"));
+    this.pre.appendChild(doc.createTextNode(world.toString()));
+    this.button = node.appendChild(doc.createElement("div"));
+    this.button.style.cssText = "position: absolute; bottom: 8px; right: -4.5em; color: white; font-family: tahoma, arial; " +
+        "background: #4ab; cursor: pointer; border-radius: 18px; font-size: 70%; width: 3.5em; text-align: center;";
+    this.button.innerHTML = "stop";
+    var self = this;
+    this.button.addEventListener("click", function() {
+        self.clicked();
+    });
+    this.disabled = false;
+    if (active) active.disable();
+    active = this;
+    this.interval = setInterval(function() {
+        self.tick();
+    }, 333);
 }
 
 Animated.prototype.clicked = function() {
-  if (this.disabled) return;
-  if (this.interval) {
-    clearInterval(this.interval);
-    this.interval = null;
-    this.button.innerHTML = "start";
-  } else {
-    var self = this;
-    this.interval = setInterval(function() { self.tick(); }, 333);
-    this.button.innerHTML = "stop";
-  }
+    if (this.disabled) return;
+    if (this.interval) {
+        clearInterval(this.interval);
+        this.interval = null;
+        this.button.innerHTML = "start";
+    } else {
+        var self = this;
+        this.interval = setInterval(function() {
+            self.tick();
+        }, 333);
+        this.button.innerHTML = "stop";
+    }
 };
 
 Animated.prototype.tick = function() {
-  this.world.turn();
-  this.pre.removeChild(this.pre.firstChild);
-  this.pre.appendChild(this.pre.ownerDocument.createTextNode(this.world.toString()));
+    this.world.turn();
+    this.pre.removeChild(this.pre.firstChild);
+    this.pre.appendChild(this.pre.ownerDocument.createTextNode(this.world.toString()));
 };
 
 Animated.prototype.disable = function() {
-  this.disabled = true;
-  clearInterval(this.interval);
-  this.button.innerHTML = "Disabled";
-  this.button.style.color = "red";
+    this.disabled = true;
+    clearInterval(this.interval);
+    this.button.innerHTML = "Disabled";
+    this.button.style.color = "red";
 };
 
-window.animateWorld = function(world) { new Animated(world); };
+window.animateWorld = function(world) {
+    new Animated(world);
+};
 
 var valley = new LifelikeWorld(
-    ["############################",
-        "#####                 ######",
-        "##    ***               **##",
-        "#     *##**         ** O *##",
-        "# *** O              ##** *#",
-        "# O                  ##*** #",
-        "# #                    #** #",
-        "#                     O #* #",
-        "#* #**                   O #",
-        "#*** #             #** O **#",
-        "##**          ** ###*** *###",
-        "############################"
+    ["######################################",
+     "#                                    #",
+     "##    ####   #                    **##",
+     "#     #   #  #             ** O *##",
+     "# *** #   #  #                  ##** *#",
+     "# O   #   #  #                   ##*** #",
+     "# #   #  #   #                     #** #",
+     "#     # #    #v                   O #* #",
+     "#* #**                             O #",
+     "#*** #                       #** O **#",
+     "##**                    ** ###*** *###",
+     "######################################"
     ], {
         "#": Wall,
         "O": SmartPlantEater,
-        "*": Plant
+        "*": Plant,
+        "v": Predator
     }
 );
 
