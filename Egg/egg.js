@@ -5,10 +5,10 @@ function parseExpression(program) {
 		expr = {type : 'value', value: match[1]};
 	else if (match = /^\d+\b/.exec(program))
 		expr = {type: 'value', value: Number(match[0])};
-	else if (match = /^[^\s()."]+/.exec(program))
-		expr = {type: "value", name: match[0]};
+	else if (match = /^[^\s(),"]+/.exec(program))
+		expr = {type: "word", name: match[0]};
 	else
-		throw new SyntaxError("Unexpected syntax: " + program);
+		throw new SyntaxError("Unexpected syntax: " + program)
 
 	return parseApply(expr, program.slice(match[0].length));
 }
@@ -21,7 +21,8 @@ function skipSpace(string) {
 
 function parseApply(expr, program) {
 	program = skipSpace(program);
-	if(program[0] != "(") {
+	if(program[0] != "(")
+
 		return {expr: expr, rest:program};
 
 	program = skipSpace(program.slice(1));
@@ -33,20 +34,17 @@ function parseApply(expr, program) {
 		if (program[0] == ",")
 			program = skipSpace(program.slice(1));
 		else if (program[0] != ")")
-			throw new SyntaxError("Expected ',' or ')'");	
+			throw new SyntaxError("Expected ',' or ')'");
 	}
 	return parseApply(expr, program.slice(1));
-	}
 }
 
 function parse(program) {
 	var result = parseExpression(program);
-	console.log(result);
+	console.log(result)
 	if (skipSpace(result.rest).length > 0)
 		throw new SyntaxError("Unexpected text");
 	return result.expr;
 }
 
 console.log(parse("+(a,10)"));
-
-
