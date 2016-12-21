@@ -54,7 +54,6 @@ function evaluate(expr, env) {
 
 		case "word":
 		if (expr.name in env){
-
 			return env[expr.name];
 		}
 		else{
@@ -141,6 +140,37 @@ run("do(define(total, 0),",
 		"				define(count, +(count, 1)))),",
 		" print(total))");
 
+specialForms["fun"] = function(args, env) {
+	if (!args.length)
+		throw new SyntaxError("Funciton needs a body");
+	function name(expr) {
+		if (expr.type != "word")
+			throw new SyntaxError("Arg names must be words");
+		return expr.name;
+	}
+
+	var argNames = args.slice(0, args.length-1).map(name);
+	var body = args[args.length - 1];
+
+	return function() {
+		if (arguments.length != argNames.length)
+			throw new TypeError("Wrong number of arguments");
+		var localEnv = Object.create(env);
+		for (var i = 0; i < arguments.length; i++)
+			localEnv[argNames[i]] = arguments[i];
+		console.log(body)
+		return evaluate(body, localEnv);
+	};
+};
+
+run (" do ( define ( plusOne , fun (a , +( a , 1) ) ) ," ,
+" print ( plusOne (10) ) ) ") ;
+
+run (" do ( define ( pow , fun ( base , exp ," ,
+" if (==( exp , 0) ," ,
+" 1 ," ,
+" *( base , pow ( base , -( exp , 1) ) ) ) ) ) ," ,
+" print ( pow (2 , 10) ) ) ") ;
 
 
 /*
