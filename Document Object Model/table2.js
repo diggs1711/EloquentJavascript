@@ -1,8 +1,9 @@
 function buildTable(mountains) {
     var table = document.createElement('table');
     var head = document.createElement('tr');
+    var fields = Object.keys(mountains[0]);
 
-    Object.keys(mountains[0]).forEach(function(h) {
+    fields.forEach(function(h) {
         var he = document.createElement('th');
         he.innerHTML = h;
         head.appendChild(he);
@@ -13,18 +14,13 @@ function buildTable(mountains) {
     mountains.forEach(function(mountain) {
         var data = document.createElement('tr');
 
-        var name = document.createElement('td');
-        name.innerHTML = mountain.name;
-
-        var height = document.createElement('td');
-        height.innerHTML = mountain.height;
-
-        var country = document.createElement('td');
-        country.innerHTML = mountain.country;
-
-        data.appendChild(name);
-        data.appendChild(height);
-        data.appendChild(country);
+        fields.forEach(function(field) {
+            var el = document.createElement('td');
+            el.innerHTML = mountain[field];
+            if (typeof mountain[field] == "number")
+                el.style.textAlign = "right";
+            data.appendChild(el);
+        })
 
         table.appendChild(data);
     });
